@@ -2,11 +2,12 @@ package main
 
 import (
 	"fmt"
+	"strings"
+	"testing"
+
 	"github.com/antchfx/htmlquery"
 	"github.com/stretchr/testify/assert"
 	"golang.org/x/net/html"
-	"strings"
-	"testing"
 )
 
 func TestParsePrediction(t *testing.T) {
@@ -42,12 +43,12 @@ func TestNodeHasClass(t *testing.T) {
 	for msg, c := range cases {
 		n := &html.Node{
 			Attr: []html.Attribute{
-				html.Attribute{
+				{
 					Namespace: "",
 					Key:       "class",
 					Val:       c.classAttr,
 				},
-				html.Attribute{
+				{
 					Namespace: "",
 					Key:       "data-test",
 					Val:       "kral lev zvirat", // testing attr

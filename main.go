@@ -2,20 +2,21 @@ package main
 
 import (
 	"fmt"
-	"github.com/antchfx/htmlquery"
-	"golang.org/x/net/html"
-	"golang.org/x/text/runes"
-	"golang.org/x/text/transform"
-	"golang.org/x/text/unicode/norm"
 	"log"
 	"net/http"
 	"os"
 	"regexp"
 	"strings"
 	"unicode"
+
+	"github.com/antchfx/htmlquery"
+	"golang.org/x/net/html"
+	"golang.org/x/text/runes"
+	"golang.org/x/text/transform"
+	"golang.org/x/text/unicode/norm"
 )
 
-const baseUrl = "https://www.horoskopy.cz"
+const baseURL = "https://www.horoskopy.cz"
 
 var signs = []string{
 	"beran",
@@ -31,6 +32,30 @@ var signs = []string{
 	"stir",
 	"ryby",
 }
+
+// Taken from https://github.com/NaAbAsD/this_is_fine, thanks!
+const sorryMessage = `
+Ouch, horoskopy.cz is probably down but I'm here for you! 🤗
+
+     ..
+    ...
+     .    ..                .
+      ..  _ .      .       ..
+     .   |_| .  .. ..    .  .
+    ..  -___-_. .   .. ..   ..
+  ..   /      )      ..      .
+ .____/| (0) (0)_()    ..     ..
+/|   | |   ^____)      ..      ..
+||   |_|    \_//     Uɔ....   .. ..
+||    || |    |    ========.  ..  ..
+||    || |    |      ||     ..   .
+||     \\_\   |\     ||   ...    .
+=========||====||    ||  ..       .
+  || ||   \Ɔ || \Ɔ   ||   ..    ..
+  || ||      ||      ||  .     ..
+-------------------------------------
+            This is fine.
+`
 
 func main() {
 	if len(os.Args) != 2 {
@@ -50,10 +75,14 @@ func main() {
 }
 
 func loadPrediction(sign string) string {
-	url := fmt.Sprintf("%s/%s", baseUrl, sign)
+	url := fmt.Sprintf("%s/%s", baseURL, sign)
 	res, err := http.DefaultClient.Get(url)
 	if err != nil {
 		log.Fatalf("Could not get data from the server: %s", err)
+	}
+	if res.StatusCode != http.StatusOK {
+		fmt.Print(sorryMessage)
+		log.Fatalf("Server returned status code %d", res.StatusCode)
 	}
 	doc, err := html.Parse(res.Body)
 	if err != nil {
@@ -69,7 +98,8 @@ func parsePrediction(document *html.Node) string {
 		log.Fatalf("Invalid XPath expression: %s", err)
 	}
 	if len(contents) != 1 {
-		log.Fatalf("Could not find contant element")
+		fmt.Print(sorryMessage)
+		log.Fatalf("Could not find content element")
 	}
 	content := contents[0]
 	read := false
@@ -115,7 +145,7 @@ func sanitizeString(s string) string {
 
 func nodeHasClass(n *html.Node, class string) bool {
 	for _, attr := range n.Attr {
-		if strings.ToLower(attr.Key) == "class" {
+		if strings.EqualFold(attr.Key, "class") {
 			if attr.Val == "" {
 				return false
 			}
@@ -132,8 +162,7 @@ func nodeHasClass(n *html.Node, class string) bool {
 }
 
 // https://stackoverflow.com/questions/26722450/remove-diacritics-using-go
-type mns struct {
-}
+type mns struct{}
 
 func (a mns) Contains(r rune) bool {
 	return unicode.Is(unicode.Mn, r) // Mn: nonspacing marks
@@ -143,7 +172,10 @@ func sanitizeSign(sign string) string {
 	sign = strings.ToLower(sign)
 	var x mns
 	t := transform.Chain(norm.NFD, runes.Remove(x), norm.NFC)
-	sign, _, _ = transform.String(t, sign)
+	sign, _, err := transform.String(t, sign)
+	if err != nil {
+		log.Fatalf("Could not sanitize sign: %s", err)
+	}
 	return sign
 }
 

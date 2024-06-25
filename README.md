@@ -20,3 +20,17 @@ your $PATH.
 ```bash
 ./horoskopycli byk
 ```
+
+
+### Development
+Make changes and  run `make` and make it pass.
+
+###### Run tests
+```bash
+make test
+```
+
+###### Fix lint
+```bash
+make lint-fix
+```

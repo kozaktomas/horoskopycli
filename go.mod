@@ -1,6 +1,6 @@
 module github.com/kozaktomas/horoskopycli
 
-go 1.21
+go 1.22
 
 require (
 	github.com/antchfx/htmlquery v1.3.0
