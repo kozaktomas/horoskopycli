@@ -37,3 +37,28 @@ func Render(horoscope Horoscope) string {
 
 	return out.String()
 }
+
+// dreamTitle heads a dream interpretation, and dreamBookURL points at the page
+// the interpretation comes from.
+const (
+	dreamTitle   = "Výklad snu"
+	dreamBookURL = "https://www.horoskopy.cz/p/snar-vyklad-snu"
+)
+
+// RenderDream lays a dream interpretation out for a terminal in the same shape
+// as a horoscope: a title with an underline, the text, then the source link.
+// The result ends with a newline.
+func RenderDream(interpretation string) string {
+	var out strings.Builder
+
+	out.WriteString(dreamTitle)
+	out.WriteString("\n")
+	out.WriteString(strings.Repeat("=", utf8.RuneCountInString(dreamTitle)))
+	out.WriteString("\n\n")
+	out.WriteString(interpretation)
+	out.WriteString("\n\n")
+	out.WriteString(dreamBookURL)
+	out.WriteString("\n")
+
+	return out.String()
+}
